@@ -84,7 +84,17 @@ export function MetroTransfer({ transfer, animate }: Props) {
   const safeX = Number.isFinite(transfer.x) ? transfer.x : 0;
   const safeY = Number.isFinite(transfer.y) ? transfer.y : 0;
 
-  try {
+  // Additional validation before rendering
+  if (!Number.isFinite(safeX) || !Number.isFinite(safeY) || !Number.isFinite(safeRadius)) {
+    console.error('MetroTransfer: Invalid rendering parameters:', { 
+      transferId: transfer.id, 
+      safeX, 
+      safeY, 
+      safeRadius 
+    });
+    return null;
+  }
+
   return (
     <motion.g
       variants={animate ? transferVariants : undefined}
@@ -215,8 +225,4 @@ export function MetroTransfer({ transfer, animate }: Props) {
       </g>
     </motion.g>
   );
-  } catch (error) {
-    console.error('MetroTransfer rendering error:', { error, transferId: transfer.id, safeRadius, safeX, safeY });
-    return null;
-  }
 }

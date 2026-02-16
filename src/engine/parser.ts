@@ -13,6 +13,39 @@ export interface ParsedPage {
   microdata: Array<Record<string, unknown>>;
   rdfa: Array<{ property: string; content: string }>;
   embeddedJson: Array<Record<string, unknown>>;
+}
+
+interface SchemaObject {
+  '@type'?: string | string[];
+  title?: string;
+  headline?: string;
+  name?: string;
+  jobTitle?: string;
+  role?: string;
+  description?: string;
+  url?: string;
+  email?: string;
+  telephone?: string;
+  address?: string | Record<string, unknown>;
+  sameAs?: string | string[];
+  [key: string]: unknown;
+}
+
+export interface ParsedPage {
+  doc: Document;
+  url: string;
+  baseUrl: string;
+  title: string;
+  metaTags: Map<string, string>;
+  openGraph: Record<string, string>;
+  twitter: Record<string, string>;
+  canonical?: string;
+  lang?: string;
+  charset?: string;
+  jsonLd: Record<string, unknown>[];
+  microdata: Array<Record<string, unknown>>;
+  rdfa: Array<{ property: string; content: string }>;
+  embeddedJson: Array<Record<string, unknown>>;
   appState: Record<string, unknown>;
   bodyText: string;
   links: Array<{ href: string; text: string }>;
@@ -673,7 +706,7 @@ export function parsePage(html: string, url: string): ParsedPage {
         }
       } else if (item['@type'] === 'https://schema.org/Person') {
         // Handle Person schema - extract detailed information
-        const person = item as any;
+        const person = item as SchemaObject;
         const personDetails: Record<string, unknown> = {
           ...item,
           title: person.name || 'Person',
@@ -736,7 +769,7 @@ export function parsePage(html: string, url: string): ParsedPage {
         }
       } else if (item['@type'] === 'https://schema.org/Organization') {
         // Handle Organization schema
-        const org = item as any;
+        const org = item as SchemaObject;
         const orgDetails: Record<string, unknown> = {
           ...item,
           title: org.name || 'Organization',

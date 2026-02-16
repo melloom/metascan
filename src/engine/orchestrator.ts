@@ -17,6 +17,17 @@ interface ScanOptions {
 
 type BaseLineId = 'identity' | 'language' | 'contacts' | 'services' | 'products' | 'pages' | 'tech' | 'social' | 'branding' | 'schema';
 
+interface SchemaObject {
+  '@type'?: string | string[];
+  title?: string;
+  headline?: string;
+  name?: string;
+  jobTitle?: string;
+  description?: string;
+  url?: string;
+  [key: string]: unknown;
+}
+
 function makeEvidence(source: string, selector: string, raw: string) {
   return { source, selector, raw };
 }
@@ -67,7 +78,7 @@ function stationsFromPage(page: ParsedPage): Station[] {
   ) => addStation(stations, lineId, label, value, scoreSource(source) * confidence, [makeEvidence(source, selector, value)]);
 
   // Helper function to extract clean titles from URLs and content
-  function extractCleanTitle(url: string, pageTitle?: string, microdata?: any): string {
+  function extractCleanTitle(url: string, pageTitle?: string, microdata?: { name?: string; title?: string }): string {
     try {
       const urlObj = new URL(url);
       const pathname = urlObj.pathname;
@@ -322,7 +333,7 @@ function stationsFromPage(page: ParsedPage): Station[] {
     add('services', 'Pricing', val, 'pricing-block', `pricing#${i}`, 0.8);
     block.features.slice(0, 4).forEach((f, fi) => add('services', 'Feature', f, 'pricing-feature', `pricing#${i}-f#${fi}`, 0.7));
   });
-  page.heroText && add('pages', 'Hero', page.heroText, 'hero', 'h1', 0.9);
+  if (page.heroText) add('pages', 'Hero', page.heroText, 'hero', 'h1', 0.9);
   page.ctas.slice(0, 8).forEach((c, i) => add('pages', 'CTA', c, 'cta', `cta#${i}`, 0.75));
   page.faqItems.slice(0, 10).forEach((faq, i) => add('pages', 'FAQ', `${faq.question} :: ${faq.answer}`, 'faq', `faq#${i}`, 0.8));
   page.testimonials.slice(0, 5).forEach((t, i) => add('pages', 'Testimonial', `${t.quote} ${t.author ?? ''}`.trim(), 'testimonial', `test#${i}`, 0.7));
@@ -360,8 +371,8 @@ function stationsFromPage(page: ParsedPage): Station[] {
 
   // Schema / app state - high confidence for structured data
   page.jsonLd.slice(0, 5).forEach((j, i) => {
-    const schemaType = (j as any)['@type'];
-    const title = (j as any).title || (j as any).headline || (j as any).name || `${schemaType} ${i + 1}`;
+    const schemaType = (j as SchemaObject)['@type'];
+    const title = (j as SchemaObject).title || (j as SchemaObject).headline || (j as SchemaObject).name || `${schemaType} ${i + 1}`;
     const content = JSON.stringify(j).slice(0, 200);
     
     // Enhanced confidence for structured data
@@ -376,7 +387,7 @@ function stationsFromPage(page: ParsedPage): Station[] {
     // Create more detailed station content
     let detailedContent = content;
     if (schemaType === 'http://schema.org/Person' || schemaType === 'Person') {
-      const person = j as any;
+      const person = j as SchemaObject;
       const personDetails = [
         person.name && `Name: ${person.name}`,
         person.jobTitle && `Title: ${person.jobTitle}`,
@@ -398,8 +409,8 @@ function stationsFromPage(page: ParsedPage): Station[] {
   });
   
   page.microdata.slice(0, 3).forEach((m, i) => {
-    const schemaType = (m as any)['@type'];
-    const title = (m as any).title || (m as any).name || `Microdata ${i + 1}`;
+    const schemaType = (m as SchemaObject)['@type'];
+    const title = (m as SchemaObject).title || (m as SchemaObject).name || `Microdata ${i + 1}`;
     const content = JSON.stringify(m).slice(0, 200);
     
     // Enhanced confidence for microdata
@@ -413,7 +424,7 @@ function stationsFromPage(page: ParsedPage): Station[] {
     // Create more detailed station content for microdata
     let detailedContent = content;
     if (schemaType === 'http://schema.org/Person' || schemaType === 'Person') {
-      const person = m as any;
+      const person = m as SchemaObject;
       const personDetails = [
         person.name && `Name: ${person.name}`,
         person.jobTitle && `Title: ${person.jobTitle}`,
@@ -436,7 +447,7 @@ function stationsFromPage(page: ParsedPage): Station[] {
   
   page.rdfa.slice(0, 3).forEach((r, i) => add('schema', `RDFa ${r.property}`, r.content, 'rdfa', `rdfa#${i}`, 0.85));
   page.embeddedJson.slice(0, 3).forEach((j, i) => {
-    const title = (j as any).title || (j as any).name || `Embedded JSON ${i + 1}`;
+    const title = (j as SchemaObject).title || (j as SchemaObject).name || `Embedded JSON ${i + 1}`;
     const content = JSON.stringify(j).slice(0, 200);
     add('schema', title, content, 'application/json', `json#${i}`, 0.8);
   });

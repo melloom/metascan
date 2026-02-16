@@ -20,10 +20,11 @@ export function useStationSearch() {
   }, [allStations, searchQuery]);
 
   const isStationHighlighted = useMemo(() => {
-    if (!searchQuery.trim()) return () => false;
-    const ids = new Set(matchedStations.map((s) => s.id));
-    return (s: Station) => ids.has(s.id);
+    if (!searchQuery.trim()) return new Set();
+    return new Set(matchedStations.map((s) => s.id));
   }, [matchedStations, searchQuery]);
 
-  return { allStations, matchedStations, isStationHighlighted };
+  const highlightFunction = (s: Station) => isStationHighlighted.has(s.id);
+
+  return { allStations, matchedStations, isStationHighlighted: highlightFunction };
 }

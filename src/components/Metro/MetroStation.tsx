@@ -64,7 +64,17 @@ export function MetroStation({ station, stationIndex, lineIndex, animate, highli
   const safeX = Number.isFinite(station.x) ? station.x : 0;
   const safeY = Number.isFinite(station.y) ? station.y : 0;
 
-  try {
+  // Additional validation before rendering
+  if (!Number.isFinite(safeX) || !Number.isFinite(safeY) || !Number.isFinite(safeRadius)) {
+    console.error('MetroStation: Invalid rendering parameters:', { 
+      stationId: station.id, 
+      safeX, 
+      safeY, 
+      safeRadius 
+    });
+    return null;
+  }
+
   return (
     <motion.g
       style={{ cursor: 'pointer', willChange: 'transform' }} // Performance optimization
@@ -158,8 +168,4 @@ export function MetroStation({ station, stationIndex, lineIndex, animate, highli
       </motion.g>
     </motion.g>
   );
-  } catch (error) {
-    console.error('MetroStation rendering error:', { error, stationId: station.id, safeRadius, safeX, safeY });
-    return null;
-  }
 }
