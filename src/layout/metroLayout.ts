@@ -2,14 +2,17 @@ import type { ScanResult, LayoutResult, LayoutLine } from '../types';
 import { routeLine } from './lineRouter';
 import { placeStations } from './stationPlacer';
 import { placeTransfers } from './transferClusterer';
+import { detectTransfers } from '../engine/transferDetector';
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../constants/layout';
 
 export function computeLayout(scanResult: ScanResult): LayoutResult {
   const layoutLines: LayoutLine[] = [];
+  const totalLines = scanResult.lines.length;
 
-  for (const line of scanResult.lines) {
-    const route = routeLine(line.id, line.stations.length);
-    const placedStations = placeStations(line.stations, route.segments, route.totalLength);
+  for (let lineIndex = 0; lineIndex < scanResult.lines.length; lineIndex++) {
+    const line = scanResult.lines[lineIndex];
+    const route = routeLine(line.id, line.stations.length, lineIndex, totalLines);
+    const placedStations = placeStations(line.stations, route.polyline, route.totalLength);
 
     layoutLines.push({
       lineId: line.id,
@@ -19,7 +22,9 @@ export function computeLayout(scanResult: ScanResult): LayoutResult {
     });
   }
 
-  const placedTransfers = placeTransfers(scanResult.transfers, layoutLines);
+  // Use new transfer detection that considers line intersections
+  const transfers = detectTransfers(layoutLines);
+  const placedTransfers = placeTransfers(transfers, layoutLines);
 
   return {
     lines: layoutLines,

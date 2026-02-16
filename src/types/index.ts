@@ -1,4 +1,6 @@
-export type LineId = 'identity' | 'contacts' | 'services' | 'pages' | 'entities' | 'tech';
+// Core line IDs from the built-in extractors, plus any dynamic IDs from content analysis
+export type CoreLineId = 'identity' | 'contacts' | 'services' | 'pages' | 'entities' | 'tech' | 'social' | 'branding' | 'schema' | 'language';
+export type LineId = string;
 
 export interface Evidence {
   source: string;

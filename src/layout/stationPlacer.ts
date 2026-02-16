@@ -1,4 +1,4 @@
-import type { Station, LayoutSegment } from '../types';
+import type { Station, LayoutPoint } from '../types';
 
 interface PlacedStation extends Station {
   x: number;
@@ -6,41 +6,40 @@ interface PlacedStation extends Station {
   labelSide: 'above' | 'below';
 }
 
-function segmentLength(seg: LayoutSegment): number {
-  const dx = seg.to.x - seg.from.x;
-  const dy = seg.to.y - seg.from.y;
+function dist(a: LayoutPoint, b: LayoutPoint): number {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-function pointAlongSegments(segments: LayoutSegment[], t: number, totalLength: number): { x: number; y: number } {
-  const targetDist = t * totalLength;
+function pointAlongPolyline(polyline: LayoutPoint[], targetDist: number): LayoutPoint {
   let accumulated = 0;
 
-  for (const seg of segments) {
-    const len = segmentLength(seg);
-    if (accumulated + len >= targetDist) {
+  for (let i = 1; i < polyline.length; i++) {
+    const segLen = dist(polyline[i - 1], polyline[i]);
+    if (accumulated + segLen >= targetDist) {
       const remaining = targetDist - accumulated;
-      const frac = len > 0 ? remaining / len : 0;
+      const frac = segLen > 0 ? remaining / segLen : 0;
       return {
-        x: seg.from.x + (seg.to.x - seg.from.x) * frac,
-        y: seg.from.y + (seg.to.y - seg.from.y) * frac,
+        x: polyline[i - 1].x + (polyline[i].x - polyline[i - 1].x) * frac,
+        y: polyline[i - 1].y + (polyline[i].y - polyline[i - 1].y) * frac,
       };
     }
-    accumulated += len;
+    accumulated += segLen;
   }
 
-  const last = segments[segments.length - 1];
-  return { x: last.to.x, y: last.to.y };
+  const last = polyline[polyline.length - 1];
+  return { x: last.x, y: last.y };
 }
 
 export function placeStations(
   stations: Station[],
-  segments: LayoutSegment[],
+  polyline: LayoutPoint[],
   totalLength: number,
 ): PlacedStation[] {
   if (stations.length === 0) return [];
 
-  const padding = 0.05;
+  const padding = 0.06;
   const usableRange = 1 - 2 * padding;
 
   return stations.map((station, i) => {
@@ -48,7 +47,7 @@ export function placeStations(
       ? 0.5
       : padding + (i / (stations.length - 1)) * usableRange;
 
-    const { x, y } = pointAlongSegments(segments, t, totalLength);
+    const { x, y } = pointAlongPolyline(polyline, t * totalLength);
 
     return {
       ...station,

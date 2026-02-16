@@ -20,9 +20,19 @@ export function MetroCanvas() {
     return computeLayout(currentResult);
   }, [currentResult]);
 
+  // Unique key forces full SVG remount when switching scans, replaying all animations
+  const layoutKey = currentResult ? `${currentResult.url}-${currentResult.timestamp}` : 'empty';
+
   const shouldAnimate = animationPhase !== 'done' && animationPhase !== 'idle';
   const showStations = animationPhase === 'stations' || animationPhase === 'transfers' || animationPhase === 'done';
   const showTransfers = animationPhase === 'transfers' || animationPhase === 'done';
+
+  // Only animate when we have a valid layout and are in the correct animation phase
+  const shouldAnimateLines = shouldAnimate && layout !== null && currentResult !== null;
+
+  // Enhanced debug logging
+  console.log(`MetroCanvas: animationPhase=${animationPhase}, shouldAnimate=${shouldAnimate}, shouldAnimateLines=${shouldAnimateLines}, layoutKey=${layoutKey}`);
+  console.log(`MetroCanvas: currentResult exists=${!!currentResult}, layout exists=${!!layout}, lines count=${currentResult?.lines?.length || 0}`);
 
   return (
     <div
@@ -32,7 +42,7 @@ export function MetroCanvas() {
     >
       {/* Grid pattern */}
       <div
-        className="absolute inset-0 opacity-20"
+        className="absolute inset-0 opacity-[0.08]"
         style={{
           backgroundImage: `
             linear-gradient(var(--canvas-grid) 1px, transparent 1px),
@@ -47,6 +57,7 @@ export function MetroCanvas() {
       {layout && (
         <div className="absolute inset-0" style={{ transform, transformOrigin: 'center center' }}>
           <svg
+            key={layoutKey}
             viewBox={`0 0 ${layout.width} ${layout.height}`}
             className="w-full h-full"
             style={{ overflow: 'visible' }}
@@ -57,13 +68,16 @@ export function MetroCanvas() {
                 key={layoutLine.lineId}
                 layoutLine={layoutLine}
                 lineIndex={i}
-                animate={shouldAnimate}
+                animate={shouldAnimateLines}
               />
             ))}
 
             {/* Stations */}
-            {(showStations || !shouldAnimate) && layout.lines.map((layoutLine, lineIdx) =>
-              layoutLine.stations.map((station, stationIdx) => (
+            {(showStations || !shouldAnimate) && layout.lines.map((layoutLine, lineIdx) => {
+              const line = currentResult?.lines.find((l) => l.id === layoutLine.lineId);
+              if (!line?.visible) return null;
+              
+              return layoutLine.stations.map((station, stationIdx) => (
                 <MetroStation
                   key={station.id}
                   station={station}
@@ -72,17 +86,24 @@ export function MetroCanvas() {
                   animate={shouldAnimate}
                   highlighted={isStationHighlighted(station)}
                 />
-              ))
-            )}
+              ));
+            })}
 
             {/* Transfers */}
-            {(showTransfers || !shouldAnimate) && layout.transfers.map((transfer) => (
-              <MetroTransfer
-                key={transfer.id}
-                transfer={transfer}
-                animate={shouldAnimate}
-              />
-            ))}
+            {(showTransfers || !shouldAnimate) && layout.transfers.map((transfer) => {
+              // Check if both lines are visible
+              const lineA = currentResult?.lines.find((l) => l.id === transfer.lineIds[0]);
+              const lineB = currentResult?.lines.find((l) => l.id === transfer.lineIds[1]);
+              if (!lineA?.visible || !lineB?.visible) return null;
+              
+              return (
+                <MetroTransfer
+                  key={transfer.id}
+                  transfer={transfer}
+                  animate={shouldAnimate}
+                />
+              );
+            })}
           </svg>
         </div>
       )}

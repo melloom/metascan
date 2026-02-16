@@ -15,25 +15,27 @@ export function SearchBar({ onSelectStation }: Props) {
 
   return (
     <div className="px-4 py-2">
-      <div className="relative">
-        <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <div className="flex items-center gap-2 mb-2">
+        <svg className="w-4 h-4 text-[var(--text-muted)] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <circle cx="11" cy="11" r="8" />
           <path d="m21 21-4.35-4.35" />
         </svg>
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search stations..."
-          className="
-            w-full pl-8 pr-3 py-2 rounded-lg text-sm
-            bg-[var(--input-bg)] border border-[var(--input-border)]
-            text-[var(--text-primary)] placeholder:text-[var(--text-muted)]
-            focus:outline-none focus:border-[var(--input-focus)] focus:ring-1 focus:ring-[var(--input-focus)]
-            transition-colors
-          "
-        />
+        <span className="text-[var(--text-muted)] text-xs font-medium uppercase tracking-wide">Search Stations</span>
       </div>
+      
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        placeholder="Type to search..."
+        className="
+          w-full px-3 py-2 rounded-lg text-sm
+          bg-[var(--input-bg)] border border-[var(--input-border)]
+          text-[var(--text-primary)] placeholder:text-[var(--text-muted)]
+          focus:outline-none focus:border-[var(--input-focus)] focus:ring-1 focus:ring-[var(--input-focus)]
+          transition-colors
+        "
+      />
 
       {searchQuery.trim() && (
         <div className="mt-2 max-h-40 overflow-y-auto space-y-0.5">
@@ -45,13 +47,18 @@ export function SearchBar({ onSelectStation }: Props) {
                 key={s.id}
                 onClick={() => onSelectStation(s.id)}
                 className="
-                  w-full text-left px-2 py-1.5 rounded text-sm
+                  w-full text-left px-2 py-2 rounded text-sm
                   hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer
                   text-[var(--text-primary)]
+                  flex flex-col gap-0.5
                 "
               >
-                <span className="text-[var(--text-muted)] text-[11px]">{s.label}: </span>
-                {s.value}
+                <div className="text-[var(--text-muted)] text-[10px] font-medium uppercase tracking-wide">
+                  {s.label}
+                </div>
+                <div className="text-[var(--text-primary)] text-xs">
+                  {s.value}
+                </div>
               </button>
             ))
           )}

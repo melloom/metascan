@@ -12,25 +12,25 @@ export function ScanOverlay() {
     <AnimatePresence>
       {isScanning && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="absolute inset-0 flex items-center justify-center bg-[var(--canvas-bg)]/80 backdrop-blur-sm z-20"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 12 }}
+          transition={{ type: 'spring', stiffness: 280, damping: 26 }}
+          className="pointer-events-none fixed bottom-6 right-6 z-30"
         >
-          <div className="text-center space-y-4">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}
-              className="w-12 h-12 mx-auto border-2 border-[var(--accent)] border-t-transparent rounded-full"
-            />
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-[var(--text-primary)] capitalize">
-                {scanStatus}...
-              </p>
-              <div className="w-48 mx-auto">
-                <ProgressBar value={scanProgress} />
+          <div className="pointer-events-auto w-72 rounded-2xl bg-[var(--panel)] shadow-xl border border-white/5 backdrop-blur-md px-4 py-3 space-y-3">
+            <div className="flex items-center gap-3">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
+                className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full"
+              />
+              <div>
+                <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">Scanning</p>
+                <p className="text-sm font-semibold text-[var(--text-primary)] capitalize">{scanStatus}</p>
               </div>
             </div>
+            <ProgressBar value={scanProgress} />
           </div>
         </motion.div>
       )}

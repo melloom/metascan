@@ -6,8 +6,8 @@ export const lineDrawVariants: Variants = {
     pathLength: 1,
     opacity: 1,
     transition: {
-      pathLength: { duration: 0.8, delay: i * 0.6, ease: 'easeInOut' },
-      opacity: { duration: 0.1, delay: i * 0.6 },
+      pathLength: { duration: 1.2, delay: i * 0.35, ease: [0.4, 0, 0.2, 1] }, // Demo-quality timing and easing
+      opacity: { duration: 0.3, delay: i * 0.35, ease: 'easeOut' },
     },
   }),
 };
@@ -19,21 +19,24 @@ export const stationPopVariants: Variants = {
     opacity: 1,
     transition: {
       type: 'spring',
-      stiffness: 400,
-      damping: 15,
-      delay: i * 0.08,
+      stiffness: 600, // Balanced for smooth but responsive
+      damping: 25, // Good damping for smooth animation
+      mass: 0.8,
+      delay: i * 0.02, // Consistent with demo timing
     },
   }),
 };
 
 export const stationLabelVariants: Variants = {
-  hidden: { opacity: 0, x: -5 },
+  hidden: { opacity: 0, y: 3, scale: 0.95 },
   visible: (i: number) => ({
     opacity: 1,
-    x: 0,
+    y: 0,
+    scale: 1,
     transition: {
-      delay: i * 0.08 + 0.1,
+      delay: i * 0.02 + 0.04, // Consistent with demo timing
       duration: 0.3,
+      ease: [0.4, 0, 0.2, 1], // Same smooth easing as lines
     },
   }),
 };
@@ -89,6 +92,6 @@ export const slideUpVariants: Variants = {
 
 export const lineFocusVariants: Variants = {
   normal: { opacity: 1, filter: 'brightness(1)' },
-  dimmed: { opacity: 0.2, filter: 'brightness(0.5)', transition: { duration: 0.3 } },
-  focused: { opacity: 1, filter: 'brightness(1.2)', transition: { duration: 0.3 } },
+  dimmed: { opacity: 0.15, filter: 'brightness(0.6)', transition: { duration: 0.3 } },
+  focused: { opacity: 1, filter: 'brightness(1.15)', transition: { duration: 0.3 } },
 };

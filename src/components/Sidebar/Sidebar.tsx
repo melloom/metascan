@@ -4,9 +4,11 @@ import { useTheme } from '../../hooks';
 import { IconButton } from '../common';
 import { UrlInput } from './UrlInput';
 import { DemoSelector } from './DemoSelector';
+import { ScanSummary } from './ScanSummary';
 import { LineToggles } from './LineToggles';
 import { SearchBar } from './SearchBar';
 import { ExportMenu } from './ExportMenu';
+import { ScanHistory } from './ScanHistory';
 
 interface Props {
   onScan: (url: string) => void;
@@ -21,6 +23,23 @@ export function Sidebar({ onScan, onSelectDemo, onSelectStation }: Props) {
 
   return (
     <>
+      {/* Desktop toggle button */}
+      <button
+        onClick={() => setSidebarOpen(true)}
+        className={`
+          fixed top-3 left-3 z-40 md:flex
+          w-10 h-10 rounded-xl flex items-center justify-center
+          bg-[var(--bg-secondary)] border border-[var(--border)]
+          text-[var(--text-primary)] cursor-pointer
+          transition-all duration-300
+          ${sidebarOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}
+        `}
+      >
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
       {/* Mobile hamburger */}
       <button
         onClick={() => setSidebarOpen(true)}
@@ -63,15 +82,15 @@ export function Sidebar({ onScan, onSelectDemo, onSelectStation }: Props) {
       >
         {/* Header */}
         <div className="px-4 py-4 flex items-center justify-between border-b border-[var(--border)]">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center">
+              <svg className="w-4.5 h-4.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                 <circle cx="12" cy="12" r="3" />
                 <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
               </svg>
             </div>
             <div>
-              <h1 className="text-sm font-bold text-[var(--text-primary)]">MetroScan</h1>
+              <h1 className="text-sm font-bold text-[var(--text-primary)] leading-tight">MetroScan</h1>
               <p className="text-[10px] text-[var(--text-muted)]">Website Intelligence</p>
             </div>
           </div>
@@ -107,14 +126,16 @@ export function Sidebar({ onScan, onSelectDemo, onSelectStation }: Props) {
         <div className="flex-1 overflow-y-auto divide-y divide-[var(--border-subtle)]">
           <UrlInput onScan={onScan} />
           <DemoSelector onSelectDemo={onSelectDemo} />
+          <ScanSummary />
           <LineToggles />
           <SearchBar onSelectStation={onSelectStation} />
           <ExportMenu />
+          <ScanHistory />
         </div>
 
         {/* Footer */}
         <div className="px-4 py-3 border-t border-[var(--border)] text-[10px] text-[var(--text-muted)]">
-          MetroScan v1.0 — Client-side scraping demo
+          MetroScan v1.0 — Client-side scraping
         </div>
       </motion.aside>
     </>

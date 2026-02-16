@@ -31,7 +31,6 @@ export function useViewport(initialScale = 0.85) {
   }, []);
 
   const onWheel = useCallback((e: WheelEvent) => {
-    e.preventDefault();
     const factor = e.deltaY > 0 ? 0.92 : 1.08;
     setViewport((v) => {
       const newScale = Math.min(3, Math.max(0.2, v.scale * factor));

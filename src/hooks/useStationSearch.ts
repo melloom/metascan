@@ -20,7 +20,7 @@ export function useStationSearch() {
   }, [allStations, searchQuery]);
 
   const isStationHighlighted = useMemo(() => {
-    if (!searchQuery.trim()) return (_s: Station) => false;
+    if (!searchQuery.trim()) return () => false;
     const ids = new Set(matchedStations.map((s) => s.id));
     return (s: Station) => ids.has(s.id);
   }, [matchedStations, searchQuery]);

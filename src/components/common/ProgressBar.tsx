@@ -8,6 +8,8 @@ interface Props {
 }
 
 export function ProgressBar({ value, color = 'var(--accent)', height = 4, className = '' }: Props) {
+  const clamped = Math.max(0, Math.min(100, value * 100));
+
   return (
     <div
       className={`w-full rounded-full overflow-hidden bg-[var(--bg-tertiary)] ${className}`}
@@ -16,9 +18,9 @@ export function ProgressBar({ value, color = 'var(--accent)', height = 4, classN
       <motion.div
         className="h-full rounded-full"
         style={{ backgroundColor: color }}
-        initial={{ width: 0 }}
-        animate={{ width: `${Math.max(0, Math.min(100, value * 100))}%` }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
+        initial={false}
+        animate={{ width: `${clamped}%` }}
+        transition={{ type: 'spring', stiffness: 140, damping: 18, mass: 0.6 }}
       />
     </div>
   );

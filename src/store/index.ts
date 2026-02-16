@@ -2,6 +2,14 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Theme, ScanStatus, ScanResult, LineId } from '../types';
 
+interface SavedScan {
+  id: string;
+  url: string;
+  title: string;
+  timestamp: number;
+  result: ScanResult;
+}
+
 interface ScanState {
   theme: Theme;
   scanStatus: ScanStatus;
@@ -14,6 +22,7 @@ interface ScanState {
   inspectorOpen: boolean;
   sidebarOpen: boolean;
   animationPhase: 'idle' | 'lines' | 'stations' | 'transfers' | 'done';
+  savedScans: SavedScan[];
 
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
@@ -29,6 +38,10 @@ interface ScanState {
   setSidebarOpen: (open: boolean) => void;
   setAnimationPhase: (phase: ScanState['animationPhase']) => void;
   reset: () => void;
+  saveCurrentScan: () => void;
+  loadSavedScan: (scanId: string) => void;
+  deleteSavedScan: (scanId: string) => void;
+  clearSavedScans: () => void;
 }
 
 const initialState = {
@@ -43,6 +56,7 @@ const initialState = {
   inspectorOpen: false,
   sidebarOpen: true,
   animationPhase: 'idle' as const,
+  savedScans: [] as SavedScan[],
 };
 
 export const useStore = create<ScanState>()(
@@ -62,7 +76,33 @@ export const useStore = create<ScanState>()(
       })),
       toggleLineVisibility: (lineId) => set((s) => {
         if (!s.currentResult) return {};
+        const targetLine = s.currentResult.lines.find((l) => l.id === lineId);
+        const willHide = targetLine?.visible;
+
+        // If hiding the line, clear selection/focus on that line
+        let selectedStationId = s.selectedStationId;
+        let inspectorOpen = s.inspectorOpen;
+        let focusedLineId = s.focusedLineId;
+
+        if (willHide) {
+          // Clear selected station if it's on this line
+          if (selectedStationId) {
+            const isOnLine = targetLine?.stations.some((st) => st.id === selectedStationId);
+            if (isOnLine) {
+              selectedStationId = null;
+              inspectorOpen = false;
+            }
+          }
+          // Clear focus if this line was focused
+          if (focusedLineId === lineId) {
+            focusedLineId = null;
+          }
+        }
+
         return {
+          selectedStationId,
+          inspectorOpen,
+          focusedLineId,
           currentResult: {
             ...s.currentResult,
             lines: s.currentResult.lines.map((l) =>
@@ -76,10 +116,51 @@ export const useStore = create<ScanState>()(
       setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
       setAnimationPhase: (animationPhase) => set({ animationPhase }),
       reset: () => set({ ...initialState, theme: undefined as never }),
+      
+      // Saved scans functionality
+      saveCurrentScan: () => set((state) => {
+        if (!state.currentResult) return state;
+        
+        const newScan: SavedScan = {
+          id: `scan-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          url: state.currentResult.url,
+          title: state.currentResult.title,
+          timestamp: Date.now(),
+          result: state.currentResult,
+        };
+        
+        // Keep only the 20 most recent scans
+        const updatedScans = [newScan, ...state.savedScans].slice(0, 20);
+        
+        return { savedScans: updatedScans };
+      }),
+      
+      loadSavedScan: (scanId) => set((state) => {
+        const scan = state.savedScans.find(s => s.id === scanId);
+        if (!scan) return state;
+        
+        return {
+          currentResult: scan.result,
+          scanStatus: 'done' as ScanStatus,
+          scanError: null,
+          scanProgress: 1,
+          selectedStationId: null,
+          animationPhase: 'done' as const,
+        };
+      }),
+      
+      deleteSavedScan: (scanId) => set((state) => ({
+        savedScans: state.savedScans.filter(s => s.id !== scanId),
+      })),
+      
+      clearSavedScans: () => set({ savedScans: [] }),
     }),
     {
       name: 'metroscan-storage',
-      partialize: (state) => ({ theme: state.theme }),
+      partialize: (state) => ({ 
+        theme: state.theme,
+        savedScans: state.savedScans,
+      }),
     }
   )
 );

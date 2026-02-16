@@ -43,24 +43,42 @@ export function exportCSV(result: ScanResult): string {
 }
 
 export function exportCRM(result: ScanResult): string {
-  const identity = result.lines.find((l) => l.id === 'identity');
-  const contacts = result.lines.find((l) => l.id === 'contacts');
-  const services = result.lines.find((l) => l.id === 'services');
+  const findLine = (keywords: string[]) => {
+    const lowerKeywords = keywords.map((k) => k.toLowerCase());
 
-  const findValue = (stations: typeof identity extends undefined ? never : NonNullable<typeof identity>['stations'], label: string) =>
-    stations?.find((s) => s.label === label)?.value ?? '';
+    return (
+      result.lines.find((l) => lowerKeywords.includes(l.id.toLowerCase())) ||
+      result.lines.find((l) => lowerKeywords.some((k) => l.id.toLowerCase().includes(k))) ||
+      result.lines.find((l) => lowerKeywords.some((k) => l.name.toLowerCase().includes(k)))
+    );
+  };
+
+  const identity = findLine(['identity']);
+  const contacts = findLine(['contact', 'contacts']);
+  const services = findLine(['service', 'services']);
+
+  const findValue = (stations: typeof identity extends undefined ? never : NonNullable<typeof identity>['stations'], label: string) => {
+    if (!stations) return '';
+    const lowered = label.toLowerCase();
+    return stations.find((s) => s.label.toLowerCase() === lowered)?.value ?? '';
+  };
+
+  const filterValues = (
+    stations: typeof contacts extends undefined ? never : NonNullable<typeof contacts>['stations'],
+    label: string,
+  ) => (stations ? stations.filter((s) => s.label.toLowerCase() === label.toLowerCase()).map((s) => s.value) : []);
 
   const crm = {
     company: {
-      name: identity ? findValue(identity.stations, 'Business Name') : '',
+      name: identity ? findValue(identity.stations, 'Business Name') || findValue(identity.stations, 'Company Name') : '',
       type: identity ? findValue(identity.stations, 'Business Type') : '',
       description: identity ? findValue(identity.stations, 'Description') : '',
       location: identity ? findValue(identity.stations, 'Location') : '',
       website: result.url,
     },
     contacts: {
-      phone: contacts ? contacts.stations.filter((s) => s.label === 'Phone').map((s) => s.value) : [],
-      email: contacts ? contacts.stations.filter((s) => s.label === 'Email').map((s) => s.value) : [],
+      phone: filterValues(contacts?.stations ?? [], 'Phone'),
+      email: filterValues(contacts?.stations ?? [], 'Email'),
       address: contacts ? findValue(contacts.stations, 'Address') : '',
       hours: contacts ? findValue(contacts.stations, 'Hours') : '',
     },
