@@ -120,13 +120,13 @@ export function getLineColor(lineId: LineId, theme: 'dark' | 'light'): string {
   // Handle new unique line IDs by extracting the base type
   const baseLineId = lineId.includes('-') ? lineId.split('-')[1] : lineId;
   
-  // Check static definitions first with base line ID
-  const def = Object.values(LINE_DEFINITIONS).find(d => d.id === baseLineId);
-  if (def) return theme === 'dark' ? def.colorDark : def.colorLight;
-
-  // Check dynamic registry with original line ID
+  // Check dynamic registry with original line ID first (for demo-specific lines)
   const dyn = dynamicLineColors.get(lineId);
   if (dyn) return theme === 'dark' ? dyn.dark : dyn.light;
+  
+  // Check static definitions with base line ID
+  const def = Object.values(LINE_DEFINITIONS).find(d => d.id === baseLineId);
+  if (def) return theme === 'dark' ? def.colorDark : def.colorLight;
   
   // Check dynamic registry with base line ID
   const dynBase = dynamicLineColors.get(baseLineId);

@@ -3,6 +3,7 @@ import { useStore } from './store';
 import { useTheme, useScanAnimation } from './hooks';
 import { runScan } from './engine/orchestrator';
 import { DEMO_DATA } from './constants/demoData';
+import { registerLineColor } from './constants/lines';
 import { Sidebar } from './components/Sidebar';
 import { MetroCanvas } from './components/Metro';
 import { Inspector } from './components/Inspector';
@@ -63,6 +64,11 @@ export default function App() {
   const handleSelectDemo = useCallback((demoId: string) => {
     const data = DEMO_DATA[demoId];
     if (!data) return;
+
+    // Register colors from demo data
+    data.lines.forEach(line => {
+      registerLineColor(line.id, line.colorDark, line.colorLight);
+    });
 
     // Clear previous state and reset animation
     selectStation(null);
